@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Sober" />
+  <meta name="theme-color" content="#0b1120" />
+  <title>Sober Day Counter</title>
+  <link id="touch-icon" rel="apple-touch-icon" href="" />
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #131c31;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --accent-soft: rgba(16, 185, 129, 0.15);
+      --accent-glow: rgba(16, 185, 129, 0.35);
+      --danger: #ef4444;
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input, textarea {
+      user-select: text;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overscroll-behavior-y: none;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 32px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 2px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .icon-btn {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.96);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 28px 20px;
+      background: radial-gradient(circle at top, rgba(16, 185, 129, 0.14), transparent 70%), var(--card);
+    }
+
+    .hero-label {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .days-num {
+      font-size: 76px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin: 4px 0;
+    }
+
+    .days-word {
+      font-size: 18px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 18px;
+    }
+
+    .hms {
+      display: inline-flex;
+      gap: 14px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 10px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hms-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 44px;
+    }
+
+    .hms-val {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .hms-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .progress-title {
+      font-weight: 600;
+    }
+
+    .progress-sub {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-track {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #059669, #34d399);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .checkin-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      border: none;
+      background: var(--accent);
+      color: #042f2e;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s ease, opacity 0.2s ease;
+    }
+
+    .checkin-btn:active {
+      transform: scale(0.98);
+    }
+
+    .checkin-btn.done {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 0 0 12px 0;
+    }
+
+    .why-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .why-empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .milestones {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .badge {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.45;
+    }
+
+    .badge.unlocked {
+      opacity: 1;
+      background: var(--accent-soft);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .badge-icon {
+      font-size: 18px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .badge-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.8);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 480px;
+      background: #162038;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      border-top: 1px solid var(--card-border);
+      padding: 24px 20px calc(env(safe-area-inset-bottom) + 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal h2 {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .field input, .field textarea {
+      width: 100%;
+      background: #0b1120;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: #042f2e;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-danger {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span>One Day at a Time</span>
+      </div>
+      <button class="icon-btn" id="open-settings">Edit</button>
+    </header>
+
+    <section class="card hero">
+      <div class="hero-label">Time Sober</div>
+      <div class="days-num" id="days-num">0</div>
+      <div class="days-word" id="days-word">Days</div>
+      <div class="hms">
+        <div class="hms-unit">
+          <span class="hms-val" id="hours-val">00</span>
+          <span class="hms-lbl">Hrs</span>
+        </div>
+        <div class="hms-unit">
+          <span class="hms-val" id="mins-val">00</span>
+          <span class="hms-lbl">Min</span>
+        </div>
+        <div class="hms-unit">
+          <span class="hms-val" id="secs-val">00</span>
+          <span class="hms-lbl">Sec</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="progress-header">
+        <span class="progress-title" id="next-milestone-title">Next: 24 Hours</span>
+        <span class="progress-sub" id="next-milestone-pct">0%</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="progress-fill"></div>
+      </div>
+    </section>
+
+    <button class="checkin-btn" id="checkin-btn">
+      <span id="checkin-text">Check In for Today</span>
+    </button>
+
+    <section class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label" id="money-label">Money Saved</div>
+        <div class="stat-value" id="money-val">$0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Check-Ins</div>
+        <div class="stat-value" id="checkins-val">0</div>
+      </div>
+    </section>
+
+    <section class="card" id="why-card">
+      <h3 class="section-title">My Why</h3>
+      <p class="why-text" id="why-display"></p>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title">Milestones</h3>
+      <div class="milestones" id="milestones-grid"></div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+      <h2 id="modal-title">Your Sobriety Start</h2>
+      <div class="field">
+        <label for="start-input">Start Date & Time</label>
+        <input type="datetime-local" id="start-input" />
+      </div>
+      <div class="field">
+        <label for="cost-input">Daily Money Saved ($ optional)</label>
+        <input type="number" id="cost-input" min="0" step="0.5" placeholder="e.g. 15" />
+      </div>
+      <div class="field">
+        <label for="why-input">Why I'm Doing This (optional)</label>
+        <textarea id="why-input" rows="3" placeholder="For my health, peace of mind, and future..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="cancel-modal">Cancel</button>
+        <button class="btn-primary" id="save-modal">Save</button>
+      </div>
+      <button class="btn-danger" id="reset-btn">Reset Counter to Right Now</button>
+    </div>
+  </div>
+
+  <script>
+    // Generate crisp iOS Home Screen icon dynamically
+    (function makeIcon() {
+      try {
+        const c = document.createElement('canvas');
+        c.width = 180;
+        c.height = 180;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#0b1120';
+        ctx.fillRect(0, 0, 180, 180);
+
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.arc(90, 90, 56, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(66, 92);
+        ctx.lineTo(83, 109);
+        ctx.lineTo(116, 73);
+        ctx.stroke();
+
+        document.getElementById('touch-icon').href = c.toDataURL('image/png');
+      } catch (e) {}
+    })();
+
+    const STORAGE_KEY = 'sober_tracker_v1';
+    const MILESTONES = [
+      { label: '24 Hours', ms: 1 * 86400000 },
+      { label: '3 Days', ms: 3 * 86400000 },
+      { label: '1 Week', ms: 7 * 86400000 },
+      { label: '2 Weeks', ms: 14 * 86400000 },
+      { label: '1 Month', ms: 30 * 86400000 },
+      { label: '60 Days', ms: 60 * 86400000 },
+      { label: '90 Days', ms: 90 * 86400000 },
+      { label: '6 Months', ms: 180 * 86400000 },
+      { label: '1 Year', ms: 365 * 86400000 },
+      { label: '2 Years', ms: 730 * 86400000 }
+    ];
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return null;
+    }
+
+    function saveState(s) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+      } catch (e) {}
+    }
+
+    function getLocalDateKey(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function toDatetimeLocal(ms) {
+      const dt = new Date(ms);
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, '0');
+      const d = String(dt.getDate()).padStart(2, '0');
+      const hh = String(dt.getHours()).padStart(2, '0');
+      const mm = String(dt.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${d}T${hh}:${mm}`;
+    }
+
+    function fromDatetimeLocal(val) {
+      const [datePart, timePart] = val.split('T');
+      const [y, m, d] = datePart.split('-').map(Number);
+      const [hh, mm] = (timePart || '00:00').split(':').map(Number);
+      return new Date(y, m - 1, d, hh, mm, 0, 0).getTime();
+    }
+
+    let state = loadState();
+    let isFirstVisit = false;
+    if (!state) {
+      isFirstVisit = true;
+      state = {
+        startMs: Date.now(),
+        dailyCost: 0,
+        why: '',
+        checkInDates: []
+      };
+      saveState(state);
+    }
+
+    const els = {
+      daysNum: document.getElementById('days-num'),
+      daysWord: document.getElementById('days-word'),
+      hours: document.getElementById('hours-val'),
+      mins: document.getElementById('mins-val'),
+      secs: document.getElementById('secs-val'),
+      nextTitle: document.getElementById('next-milestone-title'),
+      nextPct: document.getElementById('next-milestone-pct'),
+      progressFill: document.getElementById('progress-fill'),
+      checkinBtn: document.getElementById('checkin-btn'),
+      checkinText: document.getElementById('checkin-text'),
+      moneyLabel: document.getElementById('money-label'),
+      moneyVal: document.getElementById('money-val'),
+      checkinsVal: document.getElementById('checkins-val'),
+      whyDisplay: document.getElementById('why-display'),
+      milestonesGrid: document.getElementById('milestones-grid'),
+      modal: document.getElementById('modal-backdrop'),
+      modalTitle: document.getElementById('modal-title'),
+      startInput: document.getElementById('start-input'),
+      costInput: document.getElementById('cost-input'),
+      whyInput: document.getElementById('why-input'),
+      openSettings: document.getElementById('open-settings'),
+      cancelModal: document.getElementById('cancel-modal'),
+      saveModal: document.getElementById('save-modal'),
+      resetBtn: document.getElementById('reset-btn'),
+      whyCard: document.getElementById('why-card')
+    };
+
+    function renderStatic() {
+      const todayKey = getLocalDateKey();
+      const checkedToday = state.checkInDates.includes(todayKey);
+      els.checkinBtn.classList.toggle('done', checkedToday);
+      els.checkinText.textContent = checkedToday
+        ? '✓ Checked In Today — Proud of You'
+        : 'Check In for Today';
+      els.checkinsVal.textContent = state.checkInDates.length;
+
+      if (state.why && state.why.trim()) {
+        els.whyDisplay.textContent = state.why;
+        els.whyDisplay.classList.remove('why-empty');
+      } else {
+        els.whyDisplay.textContent = 'Tap Edit to add a personal reminder of why you started.';
+        els.whyDisplay.classList.add('why-empty');
+      }
+    }
+
+    function tick() {
+      const elapsed = Math.max(0, Date.now() - state.startMs);
+      const totalSeconds = Math.floor(elapsed / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+
+      els.daysNum.textContent = days;
+      els.daysWord.textContent = days === 1 ? 'Day' : 'Days';
+      els.hours.textContent = String(hours).padStart(2, '0');
+      els.mins.textContent = String(mins).padStart(2, '0');
+      els.secs.textContent = String(secs).padStart(2, '0');
+
+      // Money saved
+      const saved = (elapsed / 86400000) * (Number(state.dailyCost) || 0);
+      els.moneyVal.textContent = saved >= 1000
+        ? '$' + Math.floor(saved).toLocaleString()
+        : '$' + saved.toFixed(2);
+
+      // Next milestone
+      let prevMs = 0;
+      let next = null;
+      for (const m of MILESTONES) {
+        if (elapsed < m.ms) {
+          next = m;
+          break;
+        }
+        prevMs = m.ms;
+      }
+
+      if (next) {
+        const pct = Math.min(100, Math.max(0, ((elapsed - prevMs) / (next.ms - prevMs)) * 100));
+        els.nextTitle.textContent = `Next: ${next.label}`;
+        els.nextPct.textContent = `${Math.floor(pct)}%`;
+        els.progressFill.style.width = `${pct.toFixed(1)}%`;
+      } else {
+        els.nextTitle.textContent = 'All Milestones Reached!';
+        els.nextPct.textContent = '100%';
+        els.progressFill.style.width = '100%';
+      }
+
+      // Badges
+      els.milestonesGrid.innerHTML = MILESTONES.map(m => {
+        const unlocked = elapsed >= m.ms;
+        return `
+          <div class="badge ${unlocked ? 'unlocked' : ''}">
+            <div class="badge-icon">${unlocked ? '✓' : '•'}</div>
+            <div class="badge-name">${m.label}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openModal(firstTime = false) {
+      els.modalTitle.textContent = firstTime ? 'Set Your Start Date' : 'Edit Counter';
+      els.startInput.value = toDatetimeLocal(state.startMs);
+      els.costInput.value = state.dailyCost || '';
+      els.whyInput.value = state.why || '';
+      els.resetBtn.style.display = firstTime ? 'none' : 'block';
+      els.modal.classList.add('open');
+    }
+
+    function closeModal() {
+      els.modal.classList.remove('open');
+    }
+
+    els.openSettings.addEventListener('click', () => openModal(false));
+    els.whyCard.addEventListener('click', () => openModal(false));
+    els.cancelModal.addEventListener('click', closeModal);
+    els.modal.addEventListener('click', (e) => {
+      if (e.target === els.modal) closeModal();
+    });
+
+    els.saveModal.addEventListener('click', () => {
+      if (els.startInput.value) {
+        state.startMs = fromDatetimeLocal(els.startInput.value);
+      }
+      state.dailyCost = Math.max(0, parseFloat(els.costInput.value) || 0);
+      state.why = els.whyInput.value.trim();
+      saveState(state);
+      renderStatic();
+      tick();
+      closeModal();
+    });
+
+    els.resetBtn.addEventListener('click', () => {
+      if (confirm('Reset your counter to right now? Every fresh start counts.')) {
+        state.startMs = Date.now();
+        saveState(state);
+        tick();
+        closeModal();
+      }
+    });
+
+    els.checkinBtn.addEventListener('click', () => {
+      const todayKey = getLocalDateKey();
+      if (!state.checkInDates.includes(todayKey)) {
+        state.checkInDates.push(todayKey);
+        saveState(state);
+        renderStatic();
+      }
+    });
+
+    renderStatic();
+    tick();
+    setInterval(tick, 1000);
+    if (isFirstVisit) openModal(true);
+  </script>
+</body>
+</html>
